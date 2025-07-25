@@ -138,17 +138,41 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use("/", express.static(path.join(__dirname, "public")))
+// Configuração de segurança personalizada para permitir iframe
+app.use((req, res, next) => {
+   // Permitir iframe de domínios específicos do cassino
+   const allowedDomains = [
+      'https://lary777.online',
+      'https://cassino.com',
+      'https://localhost',
+      'http://localhost',
+      '*' // Para desenvolvimento - remover em produção
+   ];
+
+   // Configurar X-Frame-Options baseado no referrer
+   const origin = req.get('Origin') || req.get('Referer');
+   if (origin && allowedDomains.some(domain => origin.includes(domain.replace('https://', '').replace('http://', '')))) {
+      res.setHeader('X-Frame-Options', 'ALLOWALL');
+   } else {
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+   }
+
+   next();
+});
+
 app.use(
    helmet.contentSecurityPolicy({
       directives: {
-         "default-src": ["'none'"],
+         "default-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "*"],
          "base-uri": ["'self'"],
-         "font-src": ["'self'", "https:", "data:"],
-         "frame-ancestors": ["'self'"],
-         "img-src": ["'self'", "data:"],
+         "font-src": ["'self'", "https:", "data:", "*"],
+         "frame-ancestors": ["*"], // Permitir iframe de qualquer origem
+         "img-src": ["'self'", "data:", "*"],
          "object-src": ["'none'"],
-         "script-src": ["'self'", "https://cdnjs.cloudflare.com"],
-         "style-src": ["'self'", "https://cdnjs.cloudflare.com"],
+         "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com", "*"],
+         "style-src": ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "*"],
+         "connect-src": ["'self'", "*"],
+         "frame-src": ["*"]
       },
    }),
 )
