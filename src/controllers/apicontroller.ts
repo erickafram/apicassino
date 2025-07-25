@@ -212,6 +212,7 @@ export default {
          win: json.slot?.win || 0,            // ✅ Valor do ganho
          txn_id: json.slot?.txn_id || `TXN_${Date.now()}`,  // ✅ Campo correto
          game_code: json.slot?.game_code || json.game_code, // ✅ Campo correto
+         game_type: json.slot?.game_type || "slot",         // ✅ Campo obrigatório
          txn_type: json.slot?.txn_type || "debit_credit",   // ✅ Campo correto
          currency: json.currency || "BRL",
          balance_type: json.slot?.balance_type || "balance", // ✅ Tipo de saldo
