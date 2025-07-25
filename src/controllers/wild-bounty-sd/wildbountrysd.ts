@@ -134,21 +134,11 @@ export default {
       try {
          const user = await wildbountysdfunctions.getuserbyatk(token)
          let bet: number = cs * ml * 20
-         let saldoatual: number = user[0].saldo
          const gamename = "wild-bounty-sd"
-
-         emitirEventoInterno("att", {
-            token: token,
-            username: user[0].username,
-            bet: bet,
-            saldo: saldoatual,
-            rtp: user[0].rtp,
-            agentid: user[0].agentid,
-            gamecode: gamename,
-         })
 
          const agent = await allfunctions.getagentbyid(user[0].agentid)
 
+         // Buscar saldo real do cassino
          const checkuserbalance = await axios({
             maxBodyLength: Infinity,
             method: "POST",
@@ -161,10 +151,27 @@ export default {
             },
          })
 
-         if (checkuserbalance.data.msg === "INVALID_USER" || checkuserbalance.data.msg === "INSUFFICIENT_USER_FUNDS") {
-            res.send(await notcashbounty.notcash(saldoatual, cs, ml))
+         if (checkuserbalance.data.msg === "INVALID_USER") {
+            res.send(await notcashbounty.notcash(0, cs, ml))
+            return
+         } else if (checkuserbalance.data.msg === "INSUFFICIENT_USER_FUNDS") {
+            res.send(await notcashbounty.notcash(0, cs, ml))
             return
          }
+
+         // Usar saldo real do cassino, não o saldo local da API
+         let saldoatual: number = parseFloat(checkuserbalance.data.user_balance) || 0
+         console.log("SALDO ATUAL DO CASSINO:", saldoatual)
+
+         emitirEventoInterno("att", {
+            token: token,
+            username: user[0].username,
+            bet: bet,
+            saldo: saldoatual,
+            rtp: user[0].rtp,
+            agentid: user[0].agentid,
+            gamecode: gamename,
+         })
 
          const retornado = user[0].valorganho
          const valorapostado = user[0].valorapostado

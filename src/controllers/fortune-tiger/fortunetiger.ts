@@ -125,7 +125,7 @@ export default {
          }
 
          // Usar saldo real do cassino, não o saldo local da API
-         let saldoatual: number = parseFloat(checkuserbalance.data.balance) || 0
+         let saldoatual: number = parseFloat(checkuserbalance.data.user_balance) || 0
          console.log("SALDO ATUAL DO CASSINO:", saldoatual)
 
          emitirEventoInterno("att", {
