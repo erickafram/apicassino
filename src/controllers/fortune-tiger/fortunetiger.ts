@@ -99,21 +99,11 @@ export default {
          const user = await fortunefunctions.getuserbyatk(token)
          let bet: number = cs * ml * 5
          console.log(bet)
-         let saldoatual: number = user[0].saldo
          const gamename = "fortune-tiger"
-
-         emitirEventoInterno("att", {
-            token: token,
-            username: user[0].username,
-            bet: bet,
-            saldo: saldoatual,
-            rtp: user[0].rtp,
-            agentid: user[0].agentid,
-            gamecode: gamename,
-         })
 
          const agent = await allfunctions.getagentbyid(user[0].agentid)
 
+         // Buscar saldo real do cassino
          const checkuserbalance = await axios({
             maxBodyLength: Infinity,
             method: "POST",
@@ -127,12 +117,26 @@ export default {
          })
 
          if (checkuserbalance.data.msg === "INVALID_USER") {
-            res.send(await notcashtiger.notcash(saldoatual, cs, ml))
+            res.send(await notcashtiger.notcash(0, cs, ml))
             return false
          } else if (checkuserbalance.data.msg === "INSUFFICIENT_USER_FUNDS") {
-            res.send(await notcashtiger.notcash(saldoatual, cs, ml))
+            res.send(await notcashtiger.notcash(0, cs, ml))
             return false
          }
+
+         // Usar saldo real do cassino, não o saldo local da API
+         let saldoatual: number = parseFloat(checkuserbalance.data.balance) || 0
+         console.log("SALDO ATUAL DO CASSINO:", saldoatual)
+
+         emitirEventoInterno("att", {
+            token: token,
+            username: user[0].username,
+            bet: bet,
+            saldo: saldoatual,
+            rtp: user[0].rtp,
+            agentid: user[0].agentid,
+            gamecode: gamename,
+         })
 
          const retornado = user[0].valorganho
          const valorapostado = user[0].valorapostado
@@ -338,9 +342,12 @@ export default {
                agent_code: agent[0].agentcode,
                agent_secret: agent[0].secretKey,
                user_code: user[0].username,
-               user_balance: user[0].saldo,
-               user_total_credit: user[0].valorganho,
-               user_total_debit: user[0].valorapostado,
+               user_balance: newbalance,
+               user_total_credit: user[0].valorganho + valorganho,
+               user_total_debit: user[0].valorapostado + bet,
+               currency: 'BRL',
+               symbol: 'R$',
+               balance_type: 'balance',
                game_type: "slot",
                slot: {
                   provider_code: "PGSOFT",
@@ -353,7 +360,7 @@ export default {
                   txn_type: "debit_credit",
                   is_buy: false,
                   is_call: false,
-                  user_before_balance: user[0].saldo,
+                  user_before_balance: saldoatual,
                   user_after_balance: newbalance,
                   agent_before_balance: 100,
                   agent_after_balance: 100,
@@ -450,9 +457,12 @@ export default {
                   agent_code: agent[0].agentcode,
                   agent_secret: agent[0].secretKey,
                   user_code: user[0].username,
-                  user_balance: user[0].saldo,
-                  user_total_credit: user[0].valorganho,
-                  user_total_debit: user[0].valorapostado,
+                  user_balance: newbalance,
+                  user_total_credit: user[0].valorganho + valorganho,
+                  user_total_debit: user[0].valorapostado + bet,
+                  currency: 'BRL',
+                  symbol: 'R$',
+                  balance_type: 'balance',
                   game_type: "slot",
                   slot: {
                      provider_code: "PGSOFT",
@@ -465,7 +475,7 @@ export default {
                      txn_type: "debit_credit",
                      is_buy: false,
                      is_call: true,
-                     user_before_balance: user[0].saldo,
+                     user_before_balance: saldoatual,
                      user_after_balance: newbalance,
                      agent_before_balance: 100,
                      agent_after_balance: 100,
