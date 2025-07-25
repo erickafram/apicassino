@@ -56,15 +56,15 @@ export default {
       return res[0]
    },
    async savejsonspin(id: number, json: any) {
-      const res = await promisePool.query<ResultSetHeader>("UPDATE ninjaraccoonjson SET JSON = ? WHERE id = ?", [json, id])
+      const res = await promisePool.query<ResultSetHeader>("UPDATE ninjaraccoonplayerjson SET JSON = ? WHERE id = ?", [json, id])
       return res[0]
    },
    async getjsonraccoon(id: number) {
-      const res = await promisePool.query<RowDataPacket[]>("SELECT * FROM ninjaraccoonjson WHERE id=?", [id])
+      const res = await promisePool.query<RowDataPacket[]>("SELECT * FROM ninjaraccoonplayerjson WHERE id=?", [id])
       return res[0]
    },
    async createjsonraccoon(id: number) {
-      const res = await promisePool.query<ResultSetHeader>("INSERT INTO ninjaraccoonjson (id) VALUES (?)", [id])
+      const res = await promisePool.query<ResultSetHeader>("INSERT INTO ninjaraccoonplayerjson (id) VALUES (?)", [id])
 
       return res[0]
    },

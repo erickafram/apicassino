@@ -7,6 +7,7 @@ import { Server, Socket } from "socket.io"
 import moment from "moment"
 import fortunefunctions from "../../functions/fortune-tiger/fortunetigerfunctions"
 import allfunctions from "../../functions/allfunctions"
+import balancefunctions from "../../functions/balancefunctions"
 import apicontroller from "../apicontroller"
 import { emitirEventoInterno, adicionarListener } from "../../serverEvents"
 import linhaganhotiger from "../../jsons/fortune-tiger/linhaganhotiger"
@@ -151,10 +152,32 @@ export default {
          const resultadospin = await allfunctions.calcularganho(bet, saldoatual, token, gamename)
 
          if (resultadospin.result === "perda") {
+            // Processar transação de aposta usando novo sistema
+            const transactionResult = await balancefunctions.processTransaction({
+               user_id: user[0].id,
+               agent_id: user[0].agentid,
+               game_code: gamename,
+               type: 'bet',
+               amount: bet,
+               balance_before: saldoatual,
+               balance_after: saldoatual - bet,
+               balance_type: user[0].balance_type || 'balance',
+               currency: user[0].currency || 'BRL',
+               bet_amount: bet,
+               win_amount: 0,
+               provider: 'PGSOFT',
+               aggregator: 'pgapi',
+               transaction_id: `BET_${Date.now()}_${user[0].id}`,
+               session_id: token,
+               round_id: await gerarNumeroUnico()
+            })
+
+            if (!transactionResult) {
+               res.status(500).json({ error: "Erro ao processar transação" })
+               return false
+            }
+
             let newbalance = saldoatual - bet
-            await fortunefunctions.attsaldobyatk(token, newbalance)
-            await fortunefunctions.atualizardebitado(token, bet)
-            await fortunefunctions.atualizarapostado(token, bet)
             const perdajson = await linhaperdatiger.linhaperda()
 
             let json: any = {
@@ -209,13 +232,20 @@ export default {
            await allfunctions.savejsonspin(user[0].id, JSON.stringify(json), gamename);
             const txnid = v4()
             const dataFormatada: string = moment().toISOString()
+
+            // Obter dados atualizados do usuário para callback
+            const updatedUser = await balancefunctions.getUserForCallback(user[0].id)
+
             await apicontroller.callbackgame({
                agent_code: agent[0].agentcode,
                agent_secret: agent[0].secretKey,
                user_code: user[0].username,
-               user_balance: user[0].saldo,
-               user_total_credit: user[0].valorganho,
-               user_total_debit: user[0].valorapostado,
+               user_balance: newbalance,
+               user_total_credit: updatedUser?.total_won || 0,
+               user_total_debit: updatedUser?.total_bet || 0,
+               currency: updatedUser?.currency || 'BRL',
+               symbol: updatedUser?.symbol || 'R$',
+               balance_type: updatedUser?.balance_type || 'balance',
                game_type: "slot",
                slot: {
                   provider_code: "PGSOFT",
@@ -228,7 +258,7 @@ export default {
                   txn_type: "debit_credit",
                   is_buy: false,
                   is_call: false,
-                  user_before_balance: user[0].saldo,
+                  user_before_balance: saldoatual,
                   user_after_balance: newbalance,
                   agent_before_balance: 100,
                   agent_after_balance: 100,

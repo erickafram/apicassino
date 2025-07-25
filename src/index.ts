@@ -11,6 +11,7 @@ import path from "path"
 import compression from "compression"
 import { Server, Socket } from "socket.io"
 import allfunctions from "./functions/allfunctions"
+import rtpsync from "./functions/rtpsync"
 import { emitirEventoInterno, adicionarListener } from "./serverEvents"
 
 import "dotenv/config"
@@ -157,6 +158,11 @@ app.use("/status", (req, res) => {
 })
 
 app.use(routes)
+
+// Inicializar sistema de sincronização RTP
+rtpsync.startAutoSync()
+
 httpServer.listen(process.env.PORT, () => {
    logger.info("API RODANDO NA PORTA: " + process.env.PORT)
+   logger.info("Sistema de sincronização RTP iniciado")
 })

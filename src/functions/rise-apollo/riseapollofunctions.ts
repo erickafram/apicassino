@@ -56,17 +56,17 @@ export default {
   },
 
   async savejsonspin(id: number, json: any) {
-    const res = await promisePool.query<ResultSetHeader>("UPDATE riseapollojson SET JSON = ? WHERE id = ?", [json, id]);
+    const res = await promisePool.query<ResultSetHeader>("UPDATE riseapolloplayerjson SET JSON = ? WHERE id = ?", [json, id]);
     return res[0];
   },
 
-  async getjsonclover(id: number) {
-    const res = await promisePool.query<RowDataPacket[]>("SELECT * FROM riseapollojson WHERE id=?", [id]);
+  async getjsonapollo(id: number) {
+    const res = await promisePool.query<RowDataPacket[]>("SELECT * FROM riseapolloplayerjson WHERE id=?", [id]);
     return res[0];
   },
 
-  async createjsonclover(id: number) {
-    const res = await promisePool.query<ResultSetHeader>("INSERT INTO riseapollojson (id) VALUES (?)", [id]);
+  async createjsonapollo(id: number) {
+    const res = await promisePool.query<ResultSetHeader>("INSERT INTO riseapolloplayerjson (id) VALUES (?)", [id]);
     return res[0];
   },
 

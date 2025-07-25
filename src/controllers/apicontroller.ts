@@ -198,6 +198,27 @@ export default {
    async callbackgame(json: any) {
       const agent = await apifunctions.getagentbysecretkey(json.agent_secret)
 
+      // Enriquecer dados para compatibilidade com cassino
+      const enrichedData = {
+         ...json,
+         // Campos obrigatórios para o cassino
+         changeBonus: json.balance_type || "balance",
+         currency: json.currency || "BRL",
+         symbol: json.symbol || "R$",
+         // Campos de transação detalhados
+         betMoney: json.slot?.bet || 0,
+         winMoney: json.slot?.win || 0,
+         provider: json.slot?.provider_code || "PGSOFT",
+         aggregator: "pgapi",
+         // Campos de saldo compatíveis
+         balance_withdrawal: json.user_balance || 0,
+         total_balance: json.user_balance || 0,
+         // Metadados adicionais
+         transaction_type: json.slot?.txn_type || "debit_credit",
+         round_id: json.slot?.round_id || Date.now(),
+         game_uuid: json.slot?.game_code || json.game_code,
+      }
+
       try {
          await axios({
             maxBodyLength: Infinity,
@@ -206,16 +227,16 @@ export default {
             headers: {
                "Content-Type": "application/json",
             },
-            data: json,
+            data: enrichedData,
          })
             .then((data) => {
-               //console.log("NEW BALANCE" + data.data.user_balance)
+               console.log("Callback enviado com sucesso - Balance: " + data.data?.user_balance)
             })
             .catch((error: any) => {
-               console.log(error)
+               console.log("Erro no callback:", error.response?.data || error.message)
             })
       } catch (error) {
-         console.log(error)
+         console.log("Erro geral no callback:", error)
       }
    },
    async getagent(req: Request, res: Response) {

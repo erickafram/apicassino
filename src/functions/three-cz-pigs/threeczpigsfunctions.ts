@@ -56,17 +56,17 @@ export default {
   },
 
   async savejsonspin(id: number, json: any) {
-    const res = await promisePool.query<ResultSetHeader>("UPDATE zombieoutbreakjson SET JSON = ? WHERE id = ?", [json, id]);
+    const res = await promisePool.query<ResultSetHeader>("UPDATE threeczpigsplayerjson SET JSON = ? WHERE id = ?", [json, id]);
     return res[0];
   },
 
-  async getjsonzombie(id: number) {
-    const res = await promisePool.query<RowDataPacket[]>("SELECT * FROM zombieoutbreakjson WHERE id=?", [id]);
+  async getjsonpigs(id: number) {
+    const res = await promisePool.query<RowDataPacket[]>("SELECT * FROM threeczpigsplayerjson WHERE id=?", [id]);
     return res[0];
   },
 
-  async createjsonzombie(id: number) {
-    const res = await promisePool.query<ResultSetHeader>("INSERT INTO zombieoutbreakjson (id) VALUES (?)", [id]);
+  async createjsonpigs(id: number) {
+    const res = await promisePool.query<ResultSetHeader>("INSERT INTO threeczpigsplayerjson (id) VALUES (?)", [id]);
     return res[0];
   },
 

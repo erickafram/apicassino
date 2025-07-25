@@ -56,17 +56,17 @@ export default {
   },
 
   async savejsonspin(id: number, json: any) {
-    const res = await promisePool.query<ResultSetHeader>("UPDATE fortunetreejson SET JSON = ? WHERE id = ?", [json, id]);
+    const res = await promisePool.query<ResultSetHeader>("UPDATE prosperftreeplayerjson SET JSON = ? WHERE id = ?", [json, id]);
     return res[0];
   },
 
   async getjsontree(id: number) {
-    const res = await promisePool.query<RowDataPacket[]>("SELECT * FROM fortunetreejson WHERE id=?", [id]);
+    const res = await promisePool.query<RowDataPacket[]>("SELECT * FROM prosperftreeplayerjson WHERE id=?", [id]);
     return res[0];
   },
 
   async createjsontree(id: number) {
-    const res = await promisePool.query<ResultSetHeader>("INSERT INTO fortunetreejson (id) VALUES (?)", [id]);
+    const res = await promisePool.query<ResultSetHeader>("INSERT INTO prosperftreeplayerjson (id) VALUES (?)", [id]);
     return res[0];
   },
 

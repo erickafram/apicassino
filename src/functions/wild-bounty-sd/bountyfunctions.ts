@@ -56,17 +56,17 @@ export default {
   },
 
   async savejsonspin(id: number, json: any) {
-    const res = await promisePool.query<ResultSetHeader>("UPDATE zombieoutbreakjson SET JSON = ? WHERE id = ?", [json, id]);
+    const res = await promisePool.query<ResultSetHeader>("UPDATE wildbountysdplayerjson SET JSON = ? WHERE id = ?", [json, id]);
     return res[0];
   },
 
-  async getjsonzombie(id: number) {
-    const res = await promisePool.query<RowDataPacket[]>("SELECT * FROM zombieoutbreakjson WHERE id=?", [id]);
+  async getjsonbounty(id: number) {
+    const res = await promisePool.query<RowDataPacket[]>("SELECT * FROM wildbountysdplayerjson WHERE id=?", [id]);
     return res[0];
   },
 
-  async createjsonzombie(id: number) {
-    const res = await promisePool.query<ResultSetHeader>("INSERT INTO zombieoutbreakjson (id) VALUES (?)", [id]);
+  async createjsonbounty(id: number) {
+    const res = await promisePool.query<ResultSetHeader>("INSERT INTO wildbountysdplayerjson (id) VALUES (?)", [id]);
     return res[0];
   },
 

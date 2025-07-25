@@ -56,15 +56,15 @@ export default {
       return res[0]
    },
    async savejsonspin(id: number, json: any) {
-      const res = await promisePool.query<ResultSetHeader>("UPDATE wingsiguazujson SET JSON = ? WHERE id = ?", [json, id])
+      const res = await promisePool.query<ResultSetHeader>("UPDATE wingsiguazuplayerjson SET JSON = ? WHERE id = ?", [json, id])
       return res[0]
    },
    async getjsoniguazu(id: number) {
-      const res = await promisePool.query<RowDataPacket[]>("SELECT * FROM wingsiguazujson WHERE id=?", [id])
+      const res = await promisePool.query<RowDataPacket[]>("SELECT * FROM wingsiguazuplayerjson WHERE id=?", [id])
       return res[0]
    },
    async createjsoniguazu(id: number) {
-      const res = await promisePool.query<ResultSetHeader>("INSERT INTO wingsiguazujson (id) VALUES (?)", [id])
+      const res = await promisePool.query<ResultSetHeader>("INSERT INTO wingsiguazuplayerjson (id) VALUES (?)", [id])
 
       return res[0]
    },

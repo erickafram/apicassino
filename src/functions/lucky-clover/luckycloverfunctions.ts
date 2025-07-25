@@ -56,17 +56,17 @@ export default {
   },
 
   async savejsonspin(id: number, json: any) {
-    const res = await promisePool.query<ResultSetHeader>("UPDATE luckycloverjson SET JSON = ? WHERE id = ?", [json, id]);
+    const res = await promisePool.query<ResultSetHeader>("UPDATE luckycloverplayerjson SET JSON = ? WHERE id = ?", [json, id]);
     return res[0];
   },
 
   async getjsonclover(id: number) {
-    const res = await promisePool.query<RowDataPacket[]>("SELECT * FROM luckycloverjson WHERE id=?", [id]);
+    const res = await promisePool.query<RowDataPacket[]>("SELECT * FROM luckycloverplayerjson WHERE id=?", [id]);
     return res[0];
   },
 
   async createjsonclover(id: number) {
-    const res = await promisePool.query<ResultSetHeader>("INSERT INTO luckycloverjson (id) VALUES (?)", [id]);
+    const res = await promisePool.query<ResultSetHeader>("INSERT INTO luckycloverplayerjson (id) VALUES (?)", [id]);
     return res[0];
   },
 
