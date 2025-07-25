@@ -28,7 +28,23 @@ exports.default = {
     },
     attsaldobyatk(atk, novosaldo) {
         return __awaiter(this, void 0, void 0, function* () {
-            const res = yield database_1.default.query(`UPDATE users SET saldo = '${novosaldo}' WHERE atk= '${atk}'`);
+            // Validar o novo saldo antes de salvar
+            let validSaldo = parseFloat(novosaldo);
+
+            // Se for NaN, indefinido ou null, usar 0
+            if (isNaN(validSaldo) || validSaldo === null || validSaldo === undefined) {
+                validSaldo = 0;
+            }
+
+            // Garantir que seja positivo
+            if (validSaldo < 0) {
+                validSaldo = 0;
+            }
+
+            // Arredondar para 2 casas decimais
+            validSaldo = Math.round(validSaldo * 100) / 100;
+
+            const res = yield database_1.default.query(`UPDATE users SET saldo = ? WHERE atk = ?`, [validSaldo, atk]);
             return res[0];
         });
     },

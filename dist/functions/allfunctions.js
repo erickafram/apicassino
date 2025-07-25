@@ -94,7 +94,25 @@ exports.default = {
     },
     updatertp(token, rtp) {
         return __awaiter(this, void 0, void 0, function* () {
-            const [result] = yield database_1.default.query("UPDATE users SET rtp = ? WHERE token = ?", [rtp, token]);
+            // Validar e limitar o RTP a valores razoáveis
+            let validRtp = rtp;
+
+            // Se RTP for NaN, indefinido ou null, usar 0
+            if (isNaN(validRtp) || validRtp === null || validRtp === undefined) {
+                validRtp = 0;
+            }
+
+            // Limitar RTP entre 0 e 999.99 para evitar overflow
+            if (validRtp < 0) {
+                validRtp = 0;
+            } else if (validRtp > 999.99) {
+                validRtp = 999.99;
+            }
+
+            // Arredondar para 2 casas decimais
+            validRtp = Math.round(validRtp * 100) / 100;
+
+            const [result] = yield database_1.default.query("UPDATE users SET rtp = ? WHERE token = ?", [validRtp, token]);
             return result;
         });
     },
