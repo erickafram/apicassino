@@ -1,4 +1,4 @@
-import { promisePool } from "../database"
+import promisePool from "../database"
 import { ResultSetHeader, RowDataPacket } from "mysql2"
 
 interface UserBalance {
@@ -16,6 +16,7 @@ interface UserBalance {
    total_won: number
    total_lose: number
 }
+
 
 interface BalanceTransaction {
    user_id: number

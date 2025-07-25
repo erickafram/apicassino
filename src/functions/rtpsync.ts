@@ -1,4 +1,4 @@
-import { promisePool } from "../database"
+import promisePool from "../database"
 import { RowDataPacket } from "mysql2"
 import axios from "axios"
 import logger from "../logger"

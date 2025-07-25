@@ -1,4 +1,4 @@
-import { promisePool } from "../database"
+import promisePool from "../database"
 import { ResultSetHeader, RowDataPacket } from "mysql2"
 import balancefunctions from "./balancefunctions"
 import rtpsync from "./rtpsync"
