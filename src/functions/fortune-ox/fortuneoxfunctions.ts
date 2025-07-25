@@ -30,7 +30,7 @@ export default {
 
    async atualizarapostado(atk: string, bet: number) {
       const user = await this.getuserbyatk(atk)
-      const apostado = user[0].valorapostado
+      const apostado = parseFloat(user[0].valorapostado) || 0
       const novoapostado = apostado + bet
 
       const res = await promisePool.query<ResultSetHeader>(
@@ -41,7 +41,7 @@ export default {
    },
    async atualizardebitado(atk: string, bet: number) {
       const user = await this.getuserbyatk(atk)
-      const valordebitado = user[0].valordebitado
+      const valordebitado = parseFloat(user[0].valordebitado) || 0
       const novordebitado = valordebitado + bet
 
       const res = await promisePool.query<ResultSetHeader>(
@@ -52,7 +52,7 @@ export default {
    },
    async atualizarganho(atk: string, ganho: number) {
       const user = await this.getuserbyatk(atk)
-      const valorganho = user[0].valorganho
+      const valorganho = parseFloat(user[0].valorganho) || 0
       const novodeganho = valorganho + ganho
 
       const res = await promisePool.query<ResultSetHeader>(
