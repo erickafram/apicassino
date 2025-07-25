@@ -138,43 +138,26 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use("/", express.static(path.join(__dirname, "public")))
-// Configuração de segurança personalizada para permitir iframe
-app.use((req, res, next) => {
-   // Permitir iframe de domínios específicos do cassino
-   const allowedDomains = [
-      'https://lary777.online',
-      'https://cassino.com',
-      'https://localhost',
-      'http://localhost',
-      '*' // Para desenvolvimento - remover em produção
-   ];
+// Desabilitar X-Frame-Options completamente para permitir iframe
+app.use((_req, res, next) => {
+   // Remover qualquer X-Frame-Options que possa ter sido definido
+   res.removeHeader('X-Frame-Options');
 
-   // Configurar X-Frame-Options baseado no referrer
-   const origin = req.get('Origin') || req.get('Referer');
-   if (origin && allowedDomains.some(domain => origin.includes(domain.replace('https://', '').replace('http://', '')))) {
-      res.setHeader('X-Frame-Options', 'ALLOWALL');
-   } else {
-      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-   }
+   // Definir headers para permitir iframe de qualquer origem
+   res.setHeader('X-Frame-Options', 'ALLOWALL');
+
+   // Headers adicionais para garantir que funcione
+   res.setHeader('Content-Security-Policy', 'frame-ancestors *');
 
    next();
 });
 
+// Usar helmet com configurações mínimas que não interferem com iframe
 app.use(
-   helmet.contentSecurityPolicy({
-      directives: {
-         "default-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "*"],
-         "base-uri": ["'self'"],
-         "font-src": ["'self'", "https:", "data:", "*"],
-         "frame-ancestors": ["*"], // Permitir iframe de qualquer origem
-         "img-src": ["'self'", "data:", "*"],
-         "object-src": ["'none'"],
-         "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com", "*"],
-         "style-src": ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "*"],
-         "connect-src": ["'self'", "*"],
-         "frame-src": ["*"]
-      },
-   }),
+   helmet({
+      frameguard: false, // Desabilitar completamente o frameguard
+      contentSecurityPolicy: false, // Desabilitar CSP do helmet
+   })
 )
 
 app.use("/status", (req, res) => {
