@@ -76,7 +76,7 @@ CREATE TABLE `users` (
   `total_bet` decimal(20,2) NOT NULL DEFAULT 0.00,
   `total_won` decimal(20,2) NOT NULL DEFAULT 0.00,
   `total_lose` decimal(20,2) NOT NULL DEFAULT 0.00,
-  `rtp` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `rtp` decimal(8,2) NOT NULL DEFAULT 0.00,
   `isinfluencer` tinyint(1) NOT NULL DEFAULT 0,
   `agentid` int(11) NOT NULL,
   `status` enum('active','inactive','suspended') DEFAULT 'active',

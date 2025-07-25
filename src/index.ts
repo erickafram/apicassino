@@ -112,12 +112,21 @@ io.on("connection", async (socket: Socket) => {
             return false
          }
 
-         const retornado = user[0].valorganho
-         const valorapostado = user[0].valorapostado
+         const retornado = user[0].valorganho || 0
+         const valorapostado = user[0].valorapostado || 0
 
-         const rtp = Math.round((retornado / valorapostado) * 100)
+         // Calcular RTP apenas se houver apostas
+         let rtp = 0
+         if (valorapostado > 0) {
+            rtp = Math.round((retornado / valorapostado) * 100)
 
-         if (isNaN(rtp) === false) {
+            // Limitar RTP a valores razoáveis (0-500%)
+            if (rtp > 500) rtp = 500
+            if (rtp < 0) rtp = 0
+         }
+
+         // Atualizar RTP apenas se for um valor válido
+         if (!isNaN(rtp) && isFinite(rtp)) {
             await allfunctions.updatertp(token, rtp)
          }
       }, 10000)
