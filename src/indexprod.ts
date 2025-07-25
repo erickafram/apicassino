@@ -71,6 +71,8 @@ io.on("connection", async (socket: Socket) => {
             return
          }
 
+         // Comentado temporariamente para resolver problema de conexão com banco
+         /*
          setInterval(async function () {
             try {
                const user = await allfunctions.getuserbytoken(token)
@@ -92,6 +94,7 @@ io.on("connection", async (socket: Socket) => {
                logger.error("Erro no interval do socket:", error)
             }
          }, 10000)
+         */
       } catch (error) {
          logger.error("Erro no join do socket:", error)
          socket.emit('error', { message: 'Join failed' })
