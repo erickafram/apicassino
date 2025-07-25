@@ -13,8 +13,15 @@ export default {
   },
 
   async attsaldobyatk(atk: string, novosaldo: number) {
-    const res = await promisePool.query<ResultSetHeader>(`UPDATE users SET saldo = '${novosaldo}' WHERE atk= '${atk}'`);
-    return res[0];
+    // SALDO É GERENCIADO PELO CASSINO - NÃO ATUALIZAR LOCALMENTE
+    // Apenas validar se o valor não é NaN para evitar erros
+    if (isNaN(novosaldo)) {
+      console.error(`ERRO: Tentativa de atualizar saldo com valor NaN para ATK: ${atk}`)
+      return null
+    }
+
+    console.log(`INFO: Saldo calculado para ATK ${atk}: ${novosaldo} (não atualizado localmente - gerenciado pelo cassino)`)
+    return { affectedRows: 1 } // Simular sucesso sem fazer update
   },
 
   async atualizarapostado(atk: string, bet: number) {

@@ -1,4 +1,4 @@
-import promisePool from "../../database"
+﻿import promisePool from "../../database"
 import { RowDataPacket, ResultSetHeader } from "mysql2"
 
 export default {
@@ -78,3 +78,4 @@ export default {
       return res[0]
    },
 }
+
