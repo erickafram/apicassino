@@ -137,7 +137,8 @@ export default {
          const retornado = user[0].valorganho
          const valorapostado = user[0].valorapostado
 
-         const rtp = (retornado / valorapostado) * 100
+         // Usar função segura para calcular RTP
+         const rtp = allfunctions.calcularRTPSeguro(retornado, valorapostado)
 
          console.log("RTP ATUAL " + rtp)
 

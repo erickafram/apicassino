@@ -198,25 +198,32 @@ export default {
    async callbackgame(json: any) {
       const agent = await apifunctions.getagentbysecretkey(json.agent_secret)
 
-      // Enriquecer dados para compatibilidade com cassino
-      const enrichedData = {
-         ...json,
-         // Campos obrigatórios para o cassino
-         changeBonus: json.balance_type || "balance",
+      // Calcular amount baseado no tipo de transação
+      let amount = 0
+      if (json.slot?.bet && json.slot?.win) {
+         // Se tem aposta e ganho, calcular diferença
+         amount = json.slot.win - json.slot.bet
+      } else if (json.slot?.bet) {
+         // Só aposta (perda)
+         amount = -Math.abs(json.slot.bet)
+      } else if (json.slot?.win) {
+         // Só ganho
+         amount = Math.abs(json.slot.win)
+      }
+
+      // Dados no formato que o cassino espera
+      const webhookData = {
+         method: "ChangeBalance",
+         userCode: json.user_code,
+         amount: amount,
+         txnCode: json.slot?.txn_id || `TXN_${Date.now()}`,
+         gameCode: json.slot?.game_code || json.game_code,
+         txnType: json.slot?.txn_type || "debit_credit",
          currency: json.currency || "BRL",
-         symbol: json.symbol || "R$",
-         // Campos de transação detalhados
-         betMoney: json.slot?.bet || 0,
-         winMoney: json.slot?.win || 0,
+         // Dados adicionais para compatibilidade
          provider: json.slot?.provider_code || "PGSOFT",
          aggregator: "pgapi",
-         // Campos de saldo compatíveis
-         balance_withdrawal: json.user_balance || 0,
-         total_balance: json.user_balance || 0,
-         // Metadados adicionais
-         transaction_type: json.slot?.txn_type || "debit_credit",
          round_id: json.slot?.round_id || Date.now(),
-         game_uuid: json.slot?.game_code || json.game_code,
       }
 
       try {
@@ -227,16 +234,23 @@ export default {
             headers: {
                "Content-Type": "application/json",
             },
-            data: enrichedData,
+            data: webhookData,
          })
             .then((data) => {
-               console.log("Callback enviado com sucesso - Balance: " + data.data?.user_balance)
+               console.log("Webhook enviado com sucesso - Amount: " + webhookData.amount)
+               console.log("Response:", data.data)
             })
             .catch((error: any) => {
-               console.log("Erro no callback:", error.response?.data || error.message)
+               console.log("Erro no webhook:", error.response?.data || error.message)
+               logger.error("Webhook error details:", {
+                  url: `${agent[0].callbackurl}gold_api/game_callback`,
+                  data: webhookData,
+                  error: error.response?.data || error.message
+               })
             })
       } catch (error) {
-         console.log("Erro geral no callback:", error)
+         console.log("Erro geral no webhook:", error)
+         logger.error("General webhook error:", error)
       }
    },
    async getagent(req: Request, res: Response) {

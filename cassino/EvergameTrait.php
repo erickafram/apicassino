@@ -122,68 +122,103 @@ trait EvergameTrait
 
             $endpointwo = "https://api.innocodepg.online/api/v1/game_launch";
 
-            // Atualizando a condição if com os jogos suportados com códigos conhecidos
-if($game_code === '98' || $game_code === '68' || $game_code === '69' || $game_code === '126' || 
-$game_code === '1543462' || $game_code === '1695365' || $game_code === '40' || $game_code === '42' || 
-$game_code === '48' || $game_code === '63' || $game_code === '1529867' || $game_code === '1601012' || 
-$game_code === '1489936' || $game_code === '1312883' || $game_code === '1738001' || 
-$game_code === '125' || $game_code === '1682240'){
- $wallet = Wallet::where('user_id', $userId)->where('active', 1)->first();
+            // Mapeamento completo de todos os jogos da API
+            $gameMapping = [
+                // Fortune Series (principais)
+                '98' => 'fortune-ox',
+                '68' => 'fortune-mouse',
+                '69' => 'bikini-paradise',
+                '126' => 'fortune-tiger',
+                '1543462' => 'fortune-rabbit',
+                '1695365' => 'fortune-dragon',
 
- // Switch case com os mapeamentos exatos do código-fonte
- switch ($game_code) {
-     case '98':
-         $gamename = "fortune-ox";
-         break;
-     case '68':
-         $gamename = "fortune-mouse";
-         break;
-     case '69':
-         $gamename = "bikini-paradise";
-         break;
-     case '126':
-         $gamename = "fortune-tiger";
-         break;
-     case '1543462':
-         $gamename = "fortune-rabbit";
-         break;
-     case '1695365':
-         $gamename = "fortune-dragon";
-         break;
-     case '40':
-         $gamename = "jungle-delight";
-         break;
-     case '42':
-         $gamename = "ganesha-gold";
-         break;
-     case '48':
-         $gamename = "double-fortune";
-         break;
-     case '63':
-         $gamename = "dragon-tiger-luck";
-         break;
-     case '1529867':
-         $gamename = "ninja-raccoon";
-         break;
-     case '1601012':
-         $gamename = "lucky-clover";
-         break;
-     case '1489936':
-         $gamename = "ultimate-striker";
-         break;
-     case '1312883':
-         $gamename = "prosper-ftree";
-         break;
-     case '1738001':
-         $gamename = "chicky-run";
-         break;
-     case '125':
-         $gamename = "butterfly-blossom";
-         break;
-     case '1682240':
-         $gamename = "cash-mania";
-         break;
- }
+                // Jogos clássicos PG Soft
+                '1' => 'honey-trap-diao-chan',
+                '2' => 'gem-saviour',
+                '3' => 'fortune-gods',
+                '6' => 'medusa-2',
+                '7' => 'medusa-1',
+                '18' => 'hood-vs-wolf',
+                '20' => 'reel-love',
+                '24' => 'win-win-won',
+                '25' => 'plushie-frenzy',
+                '26' => 'tree-of-fortune',
+                '28' => 'hotpot',
+                '29' => 'dragon-legend',
+                '31' => 'baccarat-deluxe',
+                '33' => 'hip-hop-panda',
+                '34' => 'legend-of-hou-yi',
+                '35' => 'mr-hallow-win',
+                '36' => 'prosperity-lion',
+                '37' => 'santas-gift-rush',
+                '38' => 'gem-saviour-sword',
+                '39' => 'piggy-gold',
+                '40' => 'jungle-delight',
+                '41' => 'symbols-of-egypt',
+                '42' => 'ganesha-gold',
+                '44' => 'emperors-favour',
+                '48' => 'double-fortune',
+                '50' => 'journey-to-the-wealth',
+                '53' => 'the-great-icescape',
+                '54' => 'captain-bounty',
+                '57' => 'dragon-hatch',
+                '58' => 'vampire-charm',
+                '59' => 'leprechaun-riches',
+                '60' => 'flirting-scholar',
+                '61' => 'opera-dynasty',
+                '62' => 'bali-vacation',
+                '63' => 'dragon-tiger-luck',
+                '64' => 'muay-thai-champion',
+                '65' => 'mahjong-ways',
+                '67' => 'shaolin-soccer',
+                '74' => 'mahjong-ways-2',
+                '75' => 'ganesha-fortune',
+                '82' => 'phoenix-rises',
+                '85' => 'wild-fireworks',
+                '87' => 'treasures-of-aztec',
+                '88' => 'egyptian-treasure',
+                '89' => 'lucky-neko',
+                '92' => 'wild-west-gold',
+                '94' => 'heist-stakes',
+                '100' => 'candy-bonanza',
+                '101' => 'super-golf-drive',
+                '102' => 'cocktail-nights',
+                '103' => 'mask-carnival',
+                '104' => 'wild-bandito',
+                '105' => 'heist-stakes',
+                '106' => 'ways-of-the-qilin',
+                '108' => 'oriental-prosperity',
+                '110' => 'vampire-charm',
+                '112' => 'cruise-royale',
+                '113' => 'majestic-treasures',
+                '114' => 'galactic-gems',
+                '117' => 'fortune-mouse',
+                '118' => 'alchemy-gold',
+                '120' => 'safari-wilds',
+                '121' => 'battleground-royale',
+                '125' => 'butterfly-blossom',
+                '1312883' => 'prosper-ftree',
+                '1529867' => 'ninja-raccoon',
+                '1601012' => 'lucky-clover',
+                '1489936' => 'ultimate-striker',
+                '1738001' => 'chicky-run',
+                '1682240' => 'cash-mania',
+                '1778752' => 'futebol-fever',
+                '1448762' => 'wild-bounty-sd',
+                '1372643' => 'majestic-ts',
+                '1655268' => 'wings-iguazu',
+                '1513328' => 'zombie-outbreak',
+                '1508783' => 'thai-river',
+                '1420892' => 'three-cz-pigs',
+                '1555350' => 'gdn-ice-fire',
+                '1568554' => 'rise-apollo'
+            ];
+
+            if(isset($gameMapping[$game_code])){
+                $wallet = Wallet::where('user_id', $userId)->where('active', 1)->first();
+
+                // Usar o mapeamento para obter o nome do jogo
+                $gamename = $gameMapping[$game_code];
 
  $postArray = [
      "secretKey"    => '85418049-ce94-4fc7-adba-656f01a360f4',
@@ -313,31 +348,37 @@ $game_code === '125' || $game_code === '1682240'){
      */
     private static function SetTransactionEvergame($request)
     {
-
         $data = $request->all();
-        $wallet = Wallet::where('user_id', $data['userCode'])->where('active', 1)->first();
+
+        // Log dos dados recebidos para debug
+        \Log::info('Dados recebidos da API:', $data);
+
+        // Mapear campos da API para campos do cassino
+        $userCode = $data['user_code'] ?? $data['userCode'] ?? null;
+        $gameCode = $data['game_code'] ?? $data['gameCode'] ?? null;
+        $txnId = $data['txn_id'] ?? $data['txnCode'] ?? null;
+        $txnType = $data['txn_type'] ?? $data['txnType'] ?? 'debit_credit';
+
+        // Processar valores de aposta e ganho
+        $bet = floatval($data['bet'] ?? 0);
+        $win = floatval($data['win'] ?? 0);
+        $amount = $win - $bet; // Valor líquido da transação
+
+        // Determinar tipo de saldo usado
+        $changeBonus = $data['balance_type'] ?? 'balance';
+
+        $wallet = Wallet::where('user_id', $userCode)->where('active', 1)->first();
 
         if(!empty($wallet)) {
-            if(isset($data['userCode'])) {
+            if(isset($userCode)) {
 
-                $amount = floatval($data['amount']);
-                $changeBonus = 'balance';
-
-                if($amount < 0){
-                    $bet = abs($amount);
-                    $win = 0;
-                }else{
-                    $bet = 0;
-                    $win = $amount;
-                }
-
-                \Log::info('_____________________________________________________________________________________________');
-
-                // \Log::info('Bet: '.$bet);
-                // \Log::info('Win: '.$win);
-                // \Log::info('txnType: '. $data['txnType']);
-                // \Log::info('data: '.json_encode($data));
-
+                \Log::info('Processando transação:');
+                \Log::info('Bet: '.$bet);
+                \Log::info('Win: '.$win);
+                \Log::info('Amount: '.$amount);
+                \Log::info('TxnType: '. $txnType);
+                \Log::info('GameCode: '. $gameCode);
+                \Log::info('UserCode: '. $userCode);
 
                 if ($bet == 0 && $win == 0) {
                     return response()->json([
@@ -347,33 +388,52 @@ $game_code === '125' || $game_code === '1682240'){
                     ]);
                 }
 
-                $game = Game::where('game_id', $data['gameCode'])->first();
-                $provider = Provider::where('id', $game->provider_id)->first();
-
-                self::CheckMissionExist($data['userCode'], $game);
-
-                if ($wallet->balance >= $bet) {
-                    $wallet->decrement('balance', $bet); // retira do saldo depositado
-                    $changeBonus = 'balance';
-
-                } elseif ($wallet->balance_bonus > $bet) {
-                    $wallet->decrement('balance_bonus', $bet); // retira do bônus
-                    $changeBonus = 'balance_bonus';
-
-                } elseif ($wallet->balance_withdrawal >= $bet) {
-                    $wallet->decrement('balance_withdrawal', $bet);
-                    $changeBonus = 'balance_withdrawal';
-
-                } elseif ($wallet->total_balance >= $bet) {
-                    $remainingBet = $bet - $wallet->balance;
-                    $wallet->decrement('balance', $wallet->balance);
-                    $wallet->decrement('balance_withdrawal', $remainingBet);
-                    $changeBonus = 'balance';
-                } else {
-                    return false;
+                // Buscar jogo pelo game_code da API
+                $game = Game::where('game_code', $gameCode)->first();
+                if (!$game) {
+                    // Se não encontrar, tentar pelo game_id
+                    $game = Game::where('game_id', $gameCode)->first();
                 }
 
-                return self::PrepareTransactionsEvergame($wallet, $data['userCode'], $data['txnCode'], $bet, $win, $game->game_name, $provider->code, $changeBonus, $data['txnType']);
+                $provider = $game ? Provider::where('id', $game->provider_id)->first() : null;
+
+                if ($game) {
+                    self::CheckMissionExist($userCode, $game);
+                }
+
+                // Processar apenas se houver aposta (bet > 0)
+                if ($bet > 0) {
+                    if ($wallet->balance >= $bet) {
+                        $wallet->decrement('balance', $bet);
+                        $changeBonus = 'balance';
+                    } elseif ($wallet->balance_bonus >= $bet) {
+                        $wallet->decrement('balance_bonus', $bet);
+                        $changeBonus = 'balance_bonus';
+                    } elseif ($wallet->balance_withdrawal >= $bet) {
+                        $wallet->decrement('balance_withdrawal', $bet);
+                        $changeBonus = 'balance_withdrawal';
+                    } elseif ($wallet->total_balance >= $bet) {
+                        $remainingBet = $bet - $wallet->balance;
+                        $wallet->decrement('balance', $wallet->balance);
+                        $wallet->decrement('balance_withdrawal', $remainingBet);
+                        $changeBonus = 'balance';
+                    } else {
+                        return response()->json([
+                            "status" => 1,
+                            "msg" => "INSUFFICIENT_USER_FUNDS"
+                        ]);
+                    }
+                }
+
+                // Adicionar ganhos se houver (win > 0)
+                if ($win > 0) {
+                    $wallet->increment($changeBonus, $win);
+                }
+
+                $gameName = $game ? $game->game_name : $gameCode;
+                $providerCode = $provider ? $provider->code : 'PGSOFT';
+
+                return self::PrepareTransactionsEvergame($wallet, $userCode, $txnId, $bet, $win, $gameName, $providerCode, $changeBonus, $txnType);
             }
         }
     }

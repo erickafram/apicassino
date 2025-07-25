@@ -165,6 +165,21 @@ export default {
       return resultado
    },
 
+   /**
+    * Calcula RTP de forma segura, evitando divisão por zero
+    */
+   calcularRTPSeguro(valorganho: number, valorapostado: number): number {
+      // Evitar divisão por zero que gera NaN
+      if (!valorapostado || valorapostado <= 0) {
+         return 0
+      }
+
+      const rtp = (valorganho / valorapostado) * 100
+
+      // Garantir que o resultado é um número válido
+      return isNaN(rtp) ? 0 : Math.max(0, rtp)
+   },
+
    calcularProbabilidadeComBaseNoRTP(rtp: number, probabilidadeBase: number): number {
       const rtpMin = 0
       const rtpMax = 80
