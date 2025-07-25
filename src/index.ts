@@ -12,7 +12,7 @@ import compression from "compression"
 import { Server, Socket } from "socket.io"
 import allfunctions from "./functions/allfunctions"
 // import rtpsync from "./functions/rtpsync" // Comentado temporariamente
-import { emitirEventoInterno, adicionarListener } from "./serverEvents"
+import { emitirEventoInterno, adicionarListener, removerListener } from "./serverEvents"
 
 import "dotenv/config"
 
@@ -46,6 +46,57 @@ declare module "express-serve-static-core" {
 }
 const users = new Map<string, any>()
 
+// Configurar listeners globais uma única vez
+let listenersConfigured = false
+
+function configureGlobalListeners() {
+   if (listenersConfigured) return
+
+   // Listener para attganho
+   adicionarListener("attganho", async (dados) => {
+      users.forEach(async (valor, chave) => {
+         if (valor.socketid && users.has(valor.socketid)) {
+            let currentUser = users.get(valor.socketid)
+            let newvalue = parseFloat(currentUser.aw || 0) + dados.aw
+            users.set(valor.socketid, {
+               ...currentUser,
+               aw: newvalue,
+            })
+         }
+      })
+   })
+
+   // Listener para att
+   adicionarListener("att", (dados) => {
+      let userExists = false
+      users.forEach((valor, chave) => {
+         if (valor.token === dados.token) {
+            userExists = true
+            return false
+         }
+      })
+
+      if (!userExists) {
+         users.set(dados.socketid, {
+            token: dados.token,
+            username: dados.username,
+            bet: dados.bet,
+            saldo: dados.saldo,
+            rtp: dados.rtp,
+            agentid: dados.agentid,
+            socketid: dados.socketid,
+            gamecode: dados.gamecode,
+            aw: 0
+         })
+      }
+   })
+
+   listenersConfigured = true
+}
+
+// Configurar listeners antes de aceitar conexões
+configureGlobalListeners()
+
 io.on("connection", async (socket: Socket) => {
    console.log("Usuário Conectado", socket.id);
 
@@ -72,55 +123,8 @@ io.on("connection", async (socket: Socket) => {
       }, 10000)
    })
 
-   adicionarListener("attganho", async (dados) => {
-      users.forEach(async (valor, chave) => {
-         let newvalue = parseFloat(users.get(socket.id).aw) + dados.aw
-         users.set(socket.id, {
-            aw: newvalue,
-         })
-      })
-      emitirEventoInterno("awreceive", {
-         aw: users.get(socket.id).aw,
-      })
-   })
-
-   adicionarListener("att", (dados) => {
-      users.forEach((valor, chave) => {
-         if (valor.token === dados.token) {
-            return false
-         } else {
-            users.set(socket.id, {
-               token: dados.token,
-               username: dados.username,
-               bet: dados.bet,
-               saldo: dados.saldo,
-               rtp: dados.rtp,
-               agentid: dados.agentid,
-               socketid: socket.id,
-               gamecode: dados.gamecode,
-               aw: 0,
-            })
-         }
-      })
-
-      if (Object.keys(users).length === 0) {
-         users.set(socket.id, {
-            token: dados.token,
-            username: dados.username,
-            bet: dados.bet,
-            saldo: dados.saldo,
-            rtp: dados.rtp,
-            agentid: dados.agentid,
-            socketid: socket.id,
-            gamecode: dados.gamecode,
-            aw: 0,
-         })
-      }
-   })
-
    socket.on("disconnect", (reason) => {
       users.delete(socket.id)
-
       console.log("Cliente desconectado:", reason)
    })
 })

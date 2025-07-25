@@ -198,32 +198,30 @@ export default {
    async callbackgame(json: any) {
       const agent = await apifunctions.getagentbysecretkey(json.agent_secret)
 
-      // Calcular amount baseado no tipo de transação
-      let amount = 0
-      if (json.slot?.bet && json.slot?.win) {
-         // Se tem aposta e ganho, calcular diferença
-         amount = json.slot.win - json.slot.bet
-      } else if (json.slot?.bet) {
-         // Só aposta (perda)
-         amount = -Math.abs(json.slot.bet)
-      } else if (json.slot?.win) {
-         // Só ganho
-         amount = Math.abs(json.slot.win)
-      }
+      // Log para debug
+      console.log("Enviando callback para cassino:")
+      console.log("User:", json.user_code)
+      console.log("Bet:", json.slot?.bet || 0)
+      console.log("Win:", json.slot?.win || 0)
 
-      // Dados no formato que o cassino espera
+      // Dados no formato que o cassino espera (campos corretos)
       const webhookData = {
          method: "ChangeBalance",
-         userCode: json.user_code,
-         amount: amount,
-         txnCode: json.slot?.txn_id || `TXN_${Date.now()}`,
-         gameCode: json.slot?.game_code || json.game_code,
-         txnType: json.slot?.txn_type || "debit_credit",
+         user_code: json.user_code,           // ✅ Campo correto
+         bet: json.slot?.bet || 0,            // ✅ Valor da aposta
+         win: json.slot?.win || 0,            // ✅ Valor do ganho
+         txn_id: json.slot?.txn_id || `TXN_${Date.now()}`,  // ✅ Campo correto
+         game_code: json.slot?.game_code || json.game_code, // ✅ Campo correto
+         txn_type: json.slot?.txn_type || "debit_credit",   // ✅ Campo correto
          currency: json.currency || "BRL",
+         balance_type: json.slot?.balance_type || "balance", // ✅ Tipo de saldo
          // Dados adicionais para compatibilidade
-         provider: json.slot?.provider_code || "PGSOFT",
+         provider_code: json.slot?.provider_code || "PGSOFT",
          aggregator: "pgapi",
          round_id: json.slot?.round_id || Date.now(),
+         // Dados do usuário para debug
+         user_before_balance: json.slot?.user_before_balance || 0,
+         user_after_balance: json.slot?.user_after_balance || 0,
       }
 
       try {
@@ -237,7 +235,8 @@ export default {
             data: webhookData,
          })
             .then((data) => {
-               console.log("Webhook enviado com sucesso - Amount: " + webhookData.amount)
+               console.log("Webhook enviado com sucesso!")
+               console.log("Bet:", webhookData.bet, "Win:", webhookData.win)
                console.log("Response:", data.data)
             })
             .catch((error: any) => {
