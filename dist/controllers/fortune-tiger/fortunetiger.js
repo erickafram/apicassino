@@ -168,7 +168,14 @@ exports.default = {
                 }
                 const retornado = user[0].valorganho;
                 const valorapostado = user[0].valorapostado;
-                const rtp = (retornado / valorapostado) * 100;
+                // Calcular RTP de forma segura
+                let rtp = 0;
+                if (valorapostado > 0) {
+                    rtp = Math.round((retornado / valorapostado) * 100);
+                    // Limitar RTP a valores razoáveis (0-500%)
+                    if (rtp > 500) rtp = 500;
+                    if (rtp < 0) rtp = 0;
+                }
                 console.log("RTP ATUAL " + rtp);
                 console.log("BET ATUAL " + bet);
                 if (saldoatual < bet) {
