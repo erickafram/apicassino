@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express"
-import helmet from "helmet"
+// import helmet from "helmet" // Comentado para evitar interferência com iframe
 import cors from "cors"
 import fs from "fs"
 import https from "https"
@@ -187,27 +187,22 @@ app.use((err: any, req: Request, res: Response, next: any) => {
   next(err)
 })
 app.use("/", express.static(path.join(__dirname, "public")))
-// Desabilitar X-Frame-Options completamente para permitir iframe
+// Configuração para permitir iframe - DEVE VIR ANTES DE QUALQUER OUTRO MIDDLEWARE
 app.use((_req, res, next) => {
-   // Remover qualquer X-Frame-Options que possa ter sido definido
+   // Remover completamente X-Frame-Options
    res.removeHeader('X-Frame-Options');
 
-   // Definir headers para permitir iframe de qualquer origem
-   res.setHeader('X-Frame-Options', 'ALLOWALL');
+   // Não definir X-Frame-Options - deixar vazio para permitir iframe
+   // res.setHeader('X-Frame-Options', 'DENY'); // NÃO USAR
 
-   // Headers adicionais para garantir que funcione
-   res.setHeader('Content-Security-Policy', 'frame-ancestors *');
+   // Usar apenas CSP para controle de frame
+   res.setHeader('Content-Security-Policy', 'frame-ancestors *; default-src * data: blob: filesystem: about: ws: wss: \'unsafe-inline\' \'unsafe-eval\'; script-src * data: blob: \'unsafe-inline\' \'unsafe-eval\'; connect-src * data: blob: \'unsafe-inline\'; img-src * data: blob: \'unsafe-inline\'; frame-src *; style-src * data: blob: \'unsafe-inline\';');
 
    next();
 });
 
-// Usar helmet com configurações mínimas que não interferem com iframe
-app.use(
-   helmet({
-      frameguard: false, // Desabilitar completamente o frameguard
-      contentSecurityPolicy: false, // Desabilitar CSP do helmet
-   })
-)
+// Desabilitar helmet completamente para evitar interferência
+// app.use(helmet()) // COMENTADO
 
 app.use("/status", (req, res) => {
    res.json({ status: "operational" })
