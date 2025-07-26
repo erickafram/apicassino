@@ -286,22 +286,35 @@ trait EvergameTrait
      */
     private static function GetBalanceInfoEvergame($request)
     {
-        $wallet = Wallet::where('user_id', $request->userCode)->where('active', 1)->first();
+        // COMPATIBILIDADE: Aceitar userCode ou user_code
+        $userCode = $request->userCode ?? $request->user_code ?? null;
 
-        if(!empty($wallet) && $wallet->total_balance > 0) {
+        \Log::info("GetBalance solicitado para usuário: {$userCode}");
 
-            \Log::info('Balance '.$wallet->total_balance);
+        $wallet = Wallet::where('user_id', $userCode)->where('active', 1)->first();
 
+        if(!empty($wallet)) {
+            \Log::info("Wallet encontrado - Balance: {$wallet->balance}, Bonus: {$wallet->balance_bonus}, Withdrawal: {$wallet->balance_withdrawal}");
+            \Log::info('Total Balance: '.$wallet->total_balance);
+
+            if ($wallet->total_balance > 0) {
+                return response()->json([
+                    'balance' => $wallet->total_balance,
+                    'msg' => "SUCCESS"
+                ]);
+            } else {
+                return response()->json([
+                    'balance' => 0,
+                    'msg' => "INSUFFICIENT_USER_FUNDS"
+                ]);
+            }
+        } else {
+            \Log::error("INVALID_USER: Wallet não encontrado para usuário {$userCode}");
             return response()->json([
-                'balance' => $wallet->total_balance,
-                'msg' => "SUCCESS"
+                'balance' => 0,
+                'msg' => "INVALID_USER"
             ]);
         }
-
-        return response()->json([
-            'balance' => 0,
-            'msg' => "INSUFFICIENT_USER_FUNDS"
-        ]);
     }
 
     /**
@@ -313,31 +326,48 @@ trait EvergameTrait
      */
     private static function SetTransactionEvergame($request)
     {
-
         $data = $request->all();
-        $wallet = Wallet::where('user_id', $data['userCode'])->where('active', 1)->first();
+
+        // Log dos dados recebidos para debug
+        \Log::info('Dados recebidos no webhook:', $data);
+
+        // COMPATIBILIDADE: Mapear campos da API para campos esperados
+        $userCode = $data['userCode'] ?? $data['user_code'] ?? null;
+        $gameCode = $data['gameCode'] ?? $data['game_code'] ?? null;
+        $txnId = $data['txnCode'] ?? $data['txn_id'] ?? null;
+        $txnType = $data['txnType'] ?? $data['txn_type'] ?? 'bet';
+
+        // Processar valores de aposta e ganho
+        if (isset($data['amount'])) {
+            // Formato antigo: amount negativo = bet, positivo = win
+            $amount = floatval($data['amount']);
+            if($amount < 0){
+                $bet = abs($amount);
+                $win = 0;
+            }else{
+                $bet = 0;
+                $win = $amount;
+            }
+        } else {
+            // Formato novo: bet e win separados
+            $bet = floatval($data['bet'] ?? 0);
+            $win = floatval($data['win'] ?? 0);
+        }
+
+        \Log::info("Processando: UserCode={$userCode}, Bet={$bet}, Win={$win}, GameCode={$gameCode}");
+
+        $wallet = Wallet::where('user_id', $userCode)->where('active', 1)->first();
 
         if(!empty($wallet)) {
-            if(isset($data['userCode'])) {
+            if($userCode > 0) {
 
-                $amount = floatval($data['amount']);
                 $changeBonus = 'balance';
 
-                if($amount < 0){
-                    $bet = abs($amount);
-                    $win = 0;
-                }else{
-                    $bet = 0;
-                    $win = $amount;
-                }
-
                 \Log::info('_____________________________________________________________________________________________');
-
-                // \Log::info('Bet: '.$bet);
-                // \Log::info('Win: '.$win);
-                // \Log::info('txnType: '. $data['txnType']);
-                // \Log::info('data: '.json_encode($data));
-
+                \Log::info('Bet: '.$bet);
+                \Log::info('Win: '.$win);
+                \Log::info('txnType: '. $txnType);
+                \Log::info('UserCode: '. $userCode);
 
                 if ($bet == 0 && $win == 0) {
                     return response()->json([
@@ -347,34 +377,58 @@ trait EvergameTrait
                     ]);
                 }
 
-                $game = Game::where('game_id', $data['gameCode'])->first();
-                $provider = Provider::where('id', $game->provider_id)->first();
-
-                self::CheckMissionExist($data['userCode'], $game);
-
-                if ($wallet->balance >= $bet) {
-                    $wallet->decrement('balance', $bet); // retira do saldo depositado
-                    $changeBonus = 'balance';
-
-                } elseif ($wallet->balance_bonus > $bet) {
-                    $wallet->decrement('balance_bonus', $bet); // retira do bônus
-                    $changeBonus = 'balance_bonus';
-
-                } elseif ($wallet->balance_withdrawal >= $bet) {
-                    $wallet->decrement('balance_withdrawal', $bet);
-                    $changeBonus = 'balance_withdrawal';
-
-                } elseif ($wallet->total_balance >= $bet) {
-                    $remainingBet = $bet - $wallet->balance;
-                    $wallet->decrement('balance', $wallet->balance);
-                    $wallet->decrement('balance_withdrawal', $remainingBet);
-                    $changeBonus = 'balance';
-                } else {
-                    return false;
+                // Buscar jogo - tentar diferentes campos
+                $game = Game::where('game_id', $gameCode)->first();
+                if (!$game) {
+                    $game = Game::where('game_code', $gameCode)->first();
                 }
 
-                return self::PrepareTransactionsEvergame($wallet, $data['userCode'], $data['txnCode'], $bet, $win, $game->game_name, $provider->code, $changeBonus, $data['txnType']);
+                $provider = $game ? Provider::where('id', $game->provider_id)->first() : null;
+
+                if ($game) {
+                    self::CheckMissionExist($userCode, $game);
+                }
+
+                // Processar aposta se houver
+                if ($bet > 0) {
+                    if ($wallet->balance >= $bet) {
+                        $wallet->decrement('balance', $bet);
+                        $changeBonus = 'balance';
+                    } elseif ($wallet->balance_bonus >= $bet) {
+                        $wallet->decrement('balance_bonus', $bet);
+                        $changeBonus = 'balance_bonus';
+                    } elseif ($wallet->balance_withdrawal >= $bet) {
+                        $wallet->decrement('balance_withdrawal', $bet);
+                        $changeBonus = 'balance_withdrawal';
+                    } elseif ($wallet->total_balance >= $bet) {
+                        $remainingBet = $bet - $wallet->balance;
+                        $wallet->decrement('balance', $wallet->balance);
+                        $wallet->decrement('balance_withdrawal', $remainingBet);
+                        $changeBonus = 'balance';
+                    } else {
+                        return response()->json([
+                            "status" => 1,
+                            "msg" => "INSUFFICIENT_USER_FUNDS"
+                        ]);
+                    }
+                }
+
+                // Adicionar ganhos se houver
+                if ($win > 0) {
+                    $wallet->increment($changeBonus, $win);
+                }
+
+                $gameName = $game ? $game->game_name : $gameCode;
+                $providerCode = $provider ? $provider->code : 'PGSOFT';
+
+                return self::PrepareTransactionsEvergame($wallet, $userCode, $txnId, $bet, $win, $gameName, $providerCode, $changeBonus, $txnType);
             }
+        } else {
+            \Log::error("INVALID_USER: Wallet não encontrado para usuário {$userCode}");
+            return response()->json([
+                "status" => 0,
+                "msg" => "INVALID_USER"
+            ]);
         }
     }
 
